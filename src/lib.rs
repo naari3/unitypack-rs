@@ -88,7 +88,7 @@ fn read_unity_container_header(input: &[u8]) -> IResult<&[u8], UnityContainerHea
 mod tests {
     use std::{io::Read, path::Path};
 
-    use crate::read_unity_asset;
+    use crate::{read_unity_asset, UnityContainerHeader};
 
     fn read_file<P: AsRef<Path>>(file_path: P) -> Vec<u8> {
         let mut file = std::fs::File::open(file_path).expect("file open failed");
@@ -106,5 +106,14 @@ mod tests {
         assert_eq!(6, unity_asset.header.version);
         assert_eq!("5.x.x", unity_asset.header.unity_version);
         assert_eq!("2019.4.1f1", unity_asset.header.unity_revision);
+        assert!(matches!(
+            unity_asset.container_header,
+            UnityContainerHeader::UnityFS {
+                size: 9185,
+                compressed_blocks_info_size: 65,
+                uncompressed_blocks_info_size: 91,
+                flags: 67
+            }
+        ));
     }
 }
