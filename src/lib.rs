@@ -132,19 +132,21 @@ fn read_blocks_info_and_directory(
         // kArchiveBlocksAndDirectoryInfoCombined
         take(container_header.compressed_blocks_info_size)(input)?
     };
-    let (input, block_info) = match container_header.flags & 0x3F {
+    let block_info = match container_header.flags & 0x3F {
         //kArchiveCompressionTypeMask
         1 => todo!(), // LZMA
         2 | 3 => {
-            let mut decoder = lz4::Decoder::new(compressed_blocks_info_bytes).unwrap();
-            let mut decoded = vec![];
-            std::io::copy(&mut decoder, &mut decoded);
-            (input, decoded)
+            let decoded = lz4_flex::block::decompress(
+                compressed_blocks_info_bytes,
+                container_header.uncompressed_blocks_info_size as usize,
+            )
+            .unwrap();
+            decoded
         } // LZ4, LZ4HC
-        _ => (input, compressed_blocks_info_bytes.to_owned().to_vec()), // None
+        _ => (compressed_blocks_info_bytes.to_owned().to_vec()), // None
     };
     // let block_info = block_info.as_slice();
-    let (_block_info, (storage_blocks, nodes)) = read_block_infos(&block_info)?;
+    let (_block_info, (storage_blocks, nodes)) = read_block_infos(&block_info).unwrap();
 
     Ok((input, ((header, container_header), (storage_blocks, nodes))))
 }
@@ -225,5 +227,6 @@ mod tests {
             unity_asset.container_header.uncompressed_blocks_info_size
         );
         assert_eq!(67, unity_asset.container_header.flags);
+        assert_eq!(1, unity_asset.directory_info.len());
     }
 }

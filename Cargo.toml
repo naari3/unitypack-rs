@@ -8,4 +8,4 @@ edition = "2018"
 
 [dependencies]
 nom = "6"
-lz4 = "1.23.1"
+lz4_flex = { version = "0.8.0" }
