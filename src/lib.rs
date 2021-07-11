@@ -228,5 +228,12 @@ mod tests {
         );
         assert_eq!(67, unity_asset.container_header.flags);
         assert_eq!(1, unity_asset.directory_info.len());
+        assert_eq!(0, unity_asset.directory_info[0].offset);
+        assert_eq!(34932, unity_asset.directory_info[0].size);
+        assert_eq!(4, unity_asset.directory_info[0].flags);
+        assert_eq!(
+            "CAB-f946f47e8f8bb3ec3f2f2259084955c0",
+            unity_asset.directory_info[0].path
+        );
     }
 }
