@@ -1,6 +1,5 @@
 use nom::{
-    bytes::complete::{tag, take, take_until},
-    character::complete::alpha1,
+    bytes::complete::take,
     multi::count,
     number::{
         complete::{be_i32, be_i64, be_u16},
@@ -8,6 +7,8 @@ use nom::{
     },
     IResult,
 };
+
+use crate::read_string_to_null;
 
 #[derive(Debug)]
 pub struct UnityAssetBundle {
@@ -79,19 +80,10 @@ pub fn read_unity_asset_bundle(input: &[u8]) -> IResult<&[u8], UnityAssetBundle>
 }
 
 fn read_unity_asset_bundle_header(input: &[u8]) -> IResult<&[u8], UnityAssetBundleHeader> {
-    let (input, signature) = alpha1(input)?;
-    let (input, _) = tag(b"\0")(input)?;
-    let signature = std::str::from_utf8(signature).unwrap().to_string();
-
+    let (input, signature) = read_string_to_null(input)?;
     let (input, version) = be_u32(input)?;
-
-    let (input, unity_version) = take_until("\0")(input)?;
-    let unity_version = std::str::from_utf8(unity_version).unwrap().to_string();
-    let (input, _) = tag(b"\0")(input)?;
-
-    let (input, unity_revision) = take_until("\0")(input)?;
-    let unity_revision = std::str::from_utf8(unity_revision).unwrap().to_string();
-    let (input, _) = tag(b"\0")(input)?;
+    let (input, unity_version) = read_string_to_null(input)?;
+    let (input, unity_revision) = read_string_to_null(input)?;
 
     Ok((
         input,
@@ -200,9 +192,7 @@ fn read_node(input: &[u8]) -> IResult<&[u8], UnityNode> {
     let (input, offset) = be_i64(input)?;
     let (input, size) = be_i64(input)?;
     let (input, flags) = be_u32(input)?;
-    let (input, path) = take_until("\0")(input)?;
-    let path = std::str::from_utf8(path).unwrap().to_string();
-    let (input, _) = tag(b"\0")(input)?;
+    let (input, path) = read_string_to_null(input)?;
 
     Ok((
         input,
