@@ -278,7 +278,7 @@ fn read_stream_files(
 mod tests {
     use std::{io::Read, path::Path};
 
-    use crate::read_unity_asset_bundle;
+    use crate::{read_unity_asset_bundle, UnityNode, UnityStorageBlock};
 
     fn read_file<P: AsRef<Path>>(file_path: P) -> Vec<u8> {
         let mut file = std::fs::File::open(file_path).expect("file open failed");
@@ -309,13 +309,38 @@ mod tests {
                 .uncompressed_blocks_info_size
         );
         assert_eq!(67, unity_asset_bundle.container_header.flags);
-        assert_eq!(2, unity_asset_bundle.directory_info.len());
-        assert_eq!(0, unity_asset_bundle.directory_info[0].offset);
-        assert_eq!(4512, unity_asset_bundle.directory_info[0].size);
-        assert_eq!(4, unity_asset_bundle.directory_info[0].flags);
         assert_eq!(
-            "CAB-5813386f0ea15049abeb5a688d9031d3",
-            unity_asset_bundle.directory_info[0].path
+            vec![UnityStorageBlock {
+                compressed_size: 4331,
+                uncompressed_size: 70048,
+                flags: 3
+            }],
+            unity_asset_bundle.storage_blocks
+        );
+        assert_eq!(
+            vec![
+                UnityNode {
+                    offset: 0,
+                    size: 4512,
+                    flags: 4,
+                    path: "CAB-5813386f0ea15049abeb5a688d9031d3".to_string()
+                },
+                UnityNode {
+                    offset: 4512,
+                    size: 65536,
+                    flags: 0,
+                    path: "CAB-5813386f0ea15049abeb5a688d9031d3.resS".to_string()
+                }
+            ],
+            unity_asset_bundle.directory_info
+        );
+        assert_eq!(
+            "CAB-5813386f0ea15049abeb5a688d9031d3".to_string(),
+            unity_asset_bundle.stream_files[0].path
+        );
+        assert_eq!(
+            "CAB-5813386f0ea15049abeb5a688d9031d3.resS".to_string(),
+            unity_asset_bundle.stream_files[1].path
         );
     }
 }
